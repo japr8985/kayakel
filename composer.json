@@ -1,0 +1,15 @@
+{
+    "name": "j4p/kayakel",
+    "authors": [
+        {
+            "name": "Jorge Peraza",
+            "email": "japr8985@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload":{
+     "psr-4": {
+         "j4p\\Kayakel\\" : "src/"
+     }   
+    }
+}
