@@ -1,8 +1,11 @@
 <?php
 namespace j4p\Kayakel;
 
+use j4p\Kayakel\Kayakel;
+
 class KyTicket extends Kayakel
 {
+	
     /**
 	* Creacion de tickets
 	* @param array $val arreglo con todos los valores correspondiente para la creacion de ticket
@@ -13,9 +16,7 @@ class KyTicket extends Kayakel
 		if (!is_array($val))
 			throw new Exception("Formato de solicitud no valida");			
 		
-		$result = $this->postRequest($val,"e=/Tickets/Ticket");
-		
-		return $result;	
+		return $this->postRequest($val,"e=/Tickets/Ticket");
 	}
 	/**
 	* getFindTicket
@@ -23,7 +24,7 @@ class KyTicket extends Kayakel
 	* @param The unique numeric identifier of the ticket or the ticket mask ID (e.g. ABC-123-4567)
 	* @return json
 	*/
-	public function getFindTicket($id)
+	public function findTicket($id)
 	{
 		if (is_null($id) || empty($id))
 			throw new Exception("Se requiere un id de ticket");
@@ -32,31 +33,46 @@ class KyTicket extends Kayakel
 	}
 	
 
-	#updateTicket
-	#deleteTicket
-	
+	/**
+	*
+	*/
+	public function updateTicket($id,$values)
+	{
+		if (is_null($id) || !is_numeric($id)) 
+			throw new Exception("Ticket id not valid", 1);	
 
+		return $this->putRequest("e=/Tickets/Ticket/".$id,$values);
+	}
+	
+	/**
+	* deleteTicket
+	* 
+	* @param string $id Ticket Id
+	* @return json response
+	*/
+	public function deleteTicket($id)
+	{
+		if (is_null($id) || !is_numeric($id))
+			throw new Exception("Ticket id not valid");			
+		
+		return $this->deleteRequest("e=/Tickets/Ticket/".$id);
+	}
 	/**
 	* getTicketTypes
 	* Regresa un arreglo con todos los tipos de tickets [1 ->Issue,2 ->Task,3 ->Bug,4->Feedback]
-	* @return json array 
+	* @return json response 
 	*/
-	public function getTicketTypes()
+	public function ticketTypes()
 	{
 		return $this->getRequest("e=/Tickets/TicketType");
 	}
 
 	/**
 	* getTicketStatus
-	* Regresa un array con todos los status registrados en kayako
-	* [
-	*		[id - 4, title - Open...]
-	*		[id - 5, title - On Hold...]
-	*		[id - 6, title - Closed...]
-	*	]
+	* 
 	* @return json array
 	*/
-	public function getTicketStatus()
+	public function ticketStatus()
 	{
 		return $this->getRequest("e=/Tickets/TicketStatus");
 	}

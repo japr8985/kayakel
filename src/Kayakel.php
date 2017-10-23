@@ -44,7 +44,7 @@ class Kayakel
 	* @param string $url direccion del API a la cual se hara la peticion
 	* @return json
 	*/
-	private function getRequest($url)
+	public function getRequest($url)
 	{
 		$url = $this->url.$this->createQueryRoute($url);
 		$ch = curl_init($url);
@@ -59,16 +59,14 @@ class Kayakel
 
 		curl_close($ch);
 
-		$xml = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
-		$response = json_encode($xml);
-		return $response;
+		return $this->parseToJson($result);
 	}
 	/**
 	* createBoddyPostRequest
 	* @param array $val arreglo con los elementos a enviar a la solicitud por POST
 	* @return json
 	*/
-	private function createBodyPostRequest($val)
+	private function createBody($val)
 	{
 		$val['apikey'] = $this->key;
 		$val['salt'] = $this->salt;
@@ -79,15 +77,15 @@ class Kayakel
 	}
 
 	/**
-	* posrtRequest
+	* postRequest
 	* @param array $value Valores del cuerpo de la solicitud
 	* @param string $to direccion del API a la cual se hara la peticion
 	* @return json
 	*/
-	private function postRequest($value,$to)
+	public function postRequest($value,$to)
 	{
 		$url = $this->url.$to;
-		$value = $this->createBodyPostRequest($value);
+		$value = $this->createBody($value);
 
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -98,13 +96,81 @@ class Kayakel
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $value);
 
 		$result = curl_exec($ch);
-		if (curl_errno($ch)) {
+		
+		if (curl_errno($ch)) 
 			throw new Exception(curl_errno($ch).': '.curl_error($ch));
-			
-		}
+
 		curl_close($ch);
-		$xml = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
-		$response = json_encode($xml);
-		return $response;
+		
+		return $this->parseToJson($result);
 	}
+
+
+	/**
+	* putRequest
+	* Make a request using PUT method
+	* @param int $id
+	* @param array $body with fields to update
+	* @param string $to part of url
+	* @return json
+	*/
+	public function putRequest($url,$body)
+	{
+		$url = $this->url.$url;
+		$val['apikey'] = $this->key;
+		$val['salt'] = $this->salt;
+		$val['signature'] = $this->signature;
+
+		$url .= '&'.http_build_query($val,'','&');
+		$opts = ['http' =>[
+  	    	'method' => "PUT"
+			]
+		];
+
+		$context  = stream_context_create($opts);
+		
+  		return file_get_contents($url, false, $context);
+		
+	}
+
+	private function createDeleteQuery($url)
+	{
+		$val['apikey'] = $this->key;
+		$val['salt'] = $this->salt;
+		$val['signature'] = $this->signature;
+
+		return $url.'&'.http_build_query($val,'','&');
+	}
+	public function deleteRequest($url)
+	{
+		$url = $this->createDeleteQuery($this->url.$url);
+		$opts = ['http' =>[
+  	    	'method' => "DELETE"
+			]
+		];
+  		
+  		$context  = stream_context_create($opts);
+		
+  		return file_get_contents($url, false, $context);
+	}
+
+	/**
+	* parseToJson
+	* Cast simple xml to json
+	* @param
+	* @return json || string
+	*/
+	private function parseToJson($result)
+	{
+		libxml_use_internal_errors(true);
+
+		$xml = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
+		
+		if (!$xml) {
+			return $result;
+		}
+		
+		return json_decode(json_encode($xml),true);
+	}
+
 }
