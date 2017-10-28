@@ -1,16 +1,39 @@
 <?php
 
 namespace j4p\Kayakel;
+use Exception;
 
 class Kayakel
 {
+	/**
+	* @var url of helpdesk
+	*/
     private $url;
+    /**
+    * @var secret key string of kayako
+    */
 	private $secret;
+	/**
+	* @var key api key of kayako
+	*/
 	private $key;
+	/**
+	* @var random salt for every request
+	*/
 	private $salt;
+	/**
+	* @var hash of salt and secret key
+	*/
 	private $signature;
+	/**
+	* @var encode the hash for get request
+	*/
 	private $encodedSignature;
-	
+	/**
+	* @var type of output can be json, array, xml, simplexml
+	*/
+	public $output;
+
 	public function __construct($url = '', $key = '', $secret = '')
 	{
 		
@@ -21,11 +44,12 @@ class Kayakel
 		$signature = hash_hmac('sha256',$this->salt,$this->secret,true);
 		$this->signature = base64_encode($signature);//para solicitudes POST
 		$this->encodedSignature = urlencode(base64_encode($signature));
+
+		$this->output = 'json';
     }
     /**
-	* createQueryRoute
-	* @param string $url direccion del API a la cual sera hara peticion
-	* @param array $sec arreglo de valores con la autenticacion
+	* Building the route to make a GET request
+	* @param string $url 
 	* @return string 
 	*/
 	private function createQueryRoute($url)
@@ -39,9 +63,30 @@ class Kayakel
 		
 		return $url;
 	}
+
 	/**
-	* getRequest
-	* @param string $url direccion del API a la cual se hara la peticion
+	* Set type of output
+	* @param string $format a valid output
+	*/
+	public function setTypeOutput($format)
+	{
+		if ($format != 'SimpleXMLElement' && $format != 'json' && $format != 'array') 
+			throw new Exception('json, SimpleXMLElement, array and simplexml are the only allowed values for set_output');		
+		
+		$this->output = $format;
+	}
+	/**
+	* Get type of output
+	* @return string type of output define
+	*/
+
+	public function getTypeOutput(){
+		return $this->output;
+	}
+
+	/**
+	* GET request
+	* @param string $url 
 	* @return json
 	*/
 	public function getRequest($url)
@@ -59,7 +104,7 @@ class Kayakel
 
 		curl_close($ch);
 
-		return $this->parseToJson($result);
+		return $this->response($result);
 	}
 	/**
 	* createBoddyPostRequest
@@ -102,7 +147,7 @@ class Kayakel
 
 		curl_close($ch);
 		
-		return $this->parseToJson($result);
+		return $this->response($result);
 	}
 
 
@@ -155,22 +200,38 @@ class Kayakel
 	}
 
 	/**
-	* parseToJson
+	* response
 	* Cast simple xml to json
 	* @param
-	* @return json || string
+	* @return json || array
 	*/
-	private function parseToJson($result)
+	private function response($result)
 	{
 		libxml_use_internal_errors(true);
 
 		$xml = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
 		
 		if (!$xml) {
-			return $result;
+			return $this->__output(['success' => false, 'error' => $result]);
 		}
 		
-		return json_decode(json_encode($xml),true);
+		//return json_decode(json_encode($xml),true);
+		return $this->__output($xml);
+	}
+
+	private function __output($value)
+	{
+		switch ($this->output) {
+			case 'SimpleXMLElement':
+				return $value;
+			case 'array':
+				return json_decode(json_encode($value),true);
+			case 'json':
+				return json_encode($value);			
+			default:
+				# code...
+				break;
+		}
 	}
 
 }

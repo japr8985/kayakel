@@ -1,11 +1,37 @@
 <?php
 namespace j4p\Kayakel;
 
+use Exception;
 use j4p\Kayakel\Kayakel;
 
-class KyTicket extends Kayakel
+class KyTicket
 {
-	
+	private $kayakel;
+
+	public function __construct(Kayakel $kayakel)
+	{
+		$this->kayakel = $kayakel;	
+    }
+
+    /**
+    * Retrieve a filtered list of tickets from the help desk.
+    *
+    */
+    public function listAll()
+    {
+    	$args = func_get_args();
+    	if (empty($args)) 
+    		throw new Exception("Specified department id");
+    	
+    	$department = $args[0];
+    	$url = "e=/Tickets/Ticket/ListAll/".$department;
+
+    	for ($i=1; $i < count($args) ; $i++) { 
+    		$url .= '/'.$args[0];
+    	}
+
+    	return $this->kayakel->getRequest($url);
+    }
     /**
 	* Creacion de tickets
 	* @param array $val arreglo con todos los valores correspondiente para la creacion de ticket
@@ -14,9 +40,10 @@ class KyTicket extends Kayakel
 	public function createTicket($val)
 	{
 		if (!is_array($val))
-			throw new Exception("Formato de solicitud no valida");			
+			throw new Exception("Need a array");			
 		
-		return $this->postRequest($val,"e=/Tickets/Ticket");
+		
+		return $this->kayakel->postRequest($val,"e=/Tickets/Ticket");
 	}
 	/**
 	* getFindTicket
@@ -29,7 +56,7 @@ class KyTicket extends Kayakel
 		if (is_null($id) || empty($id))
 			throw new Exception("Se requiere un id de ticket");
 			
-		return $this->getRequest("e=/Tickets/Ticket/".$id);
+		return $this->kayakel->getRequest("e=/Tickets/Ticket/".$id);
 	}
 	
 
@@ -41,7 +68,7 @@ class KyTicket extends Kayakel
 		if (is_null($id) || !is_numeric($id)) 
 			throw new Exception("Ticket id not valid", 1);	
 
-		return $this->putRequest("e=/Tickets/Ticket/".$id,$values);
+		return $this->kayakel->putRequest("e=/Tickets/Ticket/".$id,$values);
 	}
 	
 	/**
@@ -55,36 +82,6 @@ class KyTicket extends Kayakel
 		if (is_null($id) || !is_numeric($id))
 			throw new Exception("Ticket id not valid");			
 		
-		return $this->deleteRequest("e=/Tickets/Ticket/".$id);
-	}
-	/**
-	* getTicketTypes
-	* Regresa un arreglo con todos los tipos de tickets [1 ->Issue,2 ->Task,3 ->Bug,4->Feedback]
-	* @return json response 
-	*/
-	public function ticketTypes()
-	{
-		return $this->getRequest("e=/Tickets/TicketType");
-	}
-
-	/**
-	* getTicketStatus
-	* 
-	* @return json array
-	*/
-	public function ticketStatus()
-	{
-		return $this->getRequest("e=/Tickets/TicketStatus");
-	}
-
-	/**
-	* findTicketStatus
-	* Retrieve the ticket identified by $ticketid$.
-	* @param $id The unique numeric identifier of the ticket or the ticket mask ID (e.g. ABC-123-4567).
-	* @return json
-	*/
-	public function findTicketStatus($id)
-	{
-		return $this->getRequest("e=/Tickets/TicketStatus/".$id);
+		return $this->kayakel->deleteRequest("e=/Tickets/Ticket/".$id);
 	}
 }
