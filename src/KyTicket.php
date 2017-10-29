@@ -27,7 +27,7 @@ class KyTicket
     	$url = "e=/Tickets/Ticket/ListAll/".$department;
 
     	for ($i=1; $i < count($args) ; $i++) { 
-    		$url .= '/'.$args[0];
+    		$url .= '/'.$args[$i];
     	}
 
     	return $this->kayakel->getRequest($url);

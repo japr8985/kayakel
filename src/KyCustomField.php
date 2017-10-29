@@ -2,18 +2,32 @@
 
 namespace j4p\Kayakel;
 
-class KyCustomField extends Kayakel
+use j4p\Kayakel\Kayakel;
+
+class KyCustomField 
 {
-    public function getBaseCustomField()
+    var $kayakel;
+
+    function __construct(Kayakel $kayakel)
     {
-        return $this->getRequest("e=/Base/CustomField".$id);
+        $this->kayakel = $kayakel;  
     }
 
+    public function getBaseCustomField()
+    {
+        return $this->kayakel->getRequest("e=/Base/CustomField");
+    }
+
+    /**
+    * Retrieve the list of custom field options
+    * @param string $customFieldId
+    * @return SimpleXml || Json || Array
+    */
     public function getListOptions($customFieldId = null)
     {
         if (is_null($customFieldId)) {
             throw new Exception("Campo requerido");            
         }
-        return $this->getRequest("e=/Base/CustomField/ListOptions/".$customfieldid);
+        return $this->kayakel->getRequest("e=/Base/CustomField/ListOptions/".$customfieldid);
     }
 }
